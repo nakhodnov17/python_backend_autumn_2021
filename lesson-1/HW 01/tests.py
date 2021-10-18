@@ -280,11 +280,11 @@ class TestTicTacToe(unittest.TestCase):
         game.start_game()
         self.assertEqual(
             player_00.messages[-1].strip().split('\n')[-1],
-            'Game is over. It is a draw.'
+            'Player 00 game is over. It is a draw.'
         )
         self.assertEqual(
             player_01.messages[-1].strip().split('\n')[-1],
-            'Game is over. It is a draw.'
+            'Player 01 game is over. It is a draw.'
         )
 
 

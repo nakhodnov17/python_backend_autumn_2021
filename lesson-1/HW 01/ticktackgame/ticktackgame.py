@@ -125,6 +125,12 @@ class TicTacGame:
                 else self.player_01
             )
 
+            other_player = (
+                self.player_01
+                if self._current_state == self._PLAYER_00_TAG
+                else self.player_00
+            )
+
             message += '\n' + self.show_board() + '\n'
             message += f'Player {current_player.name}. It`s your move. Please, enter position to go:' + '\n'
             message += '> '
@@ -149,19 +155,17 @@ class TicTacGame:
                 message += f'Congratulations Player {current_player.name}. You won!' + '\n'
                 current_player.set(message)
 
-                other_player = (
-                    self.player_01
-                    if self._current_state == self._PLAYER_00_TAG
-                    else self.player_00
-                )
                 message = self.show_board() + '\n'
                 message += f'Player {other_player.name}. You lose!' + '\n'
                 other_player.set(message)
                 break
             if winner == self._GAME_DRAW:
                 message = self.show_board() + '\n'
-                message += 'Game is over. It is a draw.' + '\n'
+                message += f'Player {current_player.name} game is over. It is a draw.' + '\n'
                 self.player_00.set(message)
+                
+                message = self.show_board() + '\n'
+                message += f'Player {other_player.name} game is over. It is a draw.' + '\n'
                 self.player_01.set(message)
                 break
 
