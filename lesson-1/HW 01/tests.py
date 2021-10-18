@@ -70,12 +70,14 @@ class TestTicTacToe(unittest.TestCase):
         self.assertDictEqual(max_update_dict({1: 2, 2: 3}, {1: 1, 3: 2}), {1: 2, 2: 3, 3: 2})
         self.assertDictEqual(max_update_dict({1: 2, 2: 3, 4: 5}, {1: 1, 3: 2, 4: 6}), {1: 2, 2: 3, 3: 2, 4: 6})
 
-    def test_validate_input(self, n=3, k=3, p=3):
+    def test_validate_input(self, n=3, k=3, p=3, seed=42):
+        random_generator = np.random.default_rng(seed)
+
         game = TicTacGame(StdinPlayer(name='00'), StdinPlayer(name='01'), n=n, k=k, p=p)
         letters = get_combinations(2 * k, string.ascii_lowercase)
 
         for _ in range(10):
-            mask = np.random.randint(0, 3, size=[n, k])
+            mask = random_generator.integers(0, 3, size=[n, k])
             game._field[mask == 0] = game._EMPTY_TAG
             game._field[mask == 1] = game._TIC_TAG
             game._field[mask == 2] = game._TAC_TAG
