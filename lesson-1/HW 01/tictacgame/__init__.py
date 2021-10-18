@@ -1,4 +1,4 @@
 """Tic-Tac-Toe game module"""
 
-from .ticktackgame import TicTacGame
+from .tictacgame import TicTacGame
 from .utils import Player, StdinPlayer
