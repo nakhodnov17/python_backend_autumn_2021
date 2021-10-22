@@ -18,27 +18,35 @@ class CustomMeta(type):
     _prefix_name = 'custom_'
 
     def __new__(cls, clsname, superclasses, attributedict):
-        obj = type.__new__(cls, clsname, superclasses, attributedict)
-        obj.__getattribute__ = CustomMeta.decorate_getattribute(clsname, obj.__getattribute__)
+        prefixed_attributedict = {}
+        for name, value in attributedict.items():
+            if name.startswith('__') and name.endswith('__'):
+                prefixed_attributedict[name] = value
+            else:
+                prefixed_attributedict[CustomMeta._prefix_name + name] = value
 
-        return obj
+        return type.__new__(cls, clsname, superclasses, prefixed_attributedict)
+
+    def __call__(cls, *args, **kwargs):
+        base_setattr = cls.__setattr__
+        cls.__setattr__ = CustomMeta.decorate_setattr(cls.__setattr__)
+        self = super(CustomMeta, cls).__call__(*args, **kwargs)
+        cls.__setattr__ = base_setattr
+
+        return self
 
     @staticmethod
-    def decorate_getattribute(clsname, getattribute) -> Any:
+    #pylint: disable=W0622
+    def decorate_setattr(setattr) -> Any:
         """
-        Wrap __getattribute__ method from base class in order to pad all attributes with prefix
+        Wrap __setattr__ method from base class in order to pad all attributes with prefix
         """
-        @wraps(getattribute)
-        def wrapper(self, name):
+        @wraps(setattr)
+        def wrapper(self, name, value):
             if name.startswith('__') and name.endswith('__'):
-                return getattribute(self, name)
-
-            if name.startswith(CustomMeta._prefix_name):
-                base_name = name[len(CustomMeta._prefix_name):]
-                return getattribute(self, base_name)
-
-            raise AttributeError(f"AttributeError: '{clsname}' object has no attribute '{name}'")
+                return setattr(self, name, value)
+            return setattr(self, CustomMeta._prefix_name + name, value)
 
         # pylint: disable=W0212
-        wrapper._decorator_name_ = 'CustomMeta.decorate_getattribute'
+        wrapper._decorator_name_ = 'CustomMeta.decorate_setattr'
         return wrapper

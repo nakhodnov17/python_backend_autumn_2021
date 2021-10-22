@@ -25,6 +25,9 @@ class TestCustomMeta(unittest.TestCase):
         # pylint: disable=E1101
         self.assertEqual(obj.custom_custom_x, 3)
 
+        obj.x = 10
+        self.assertEqual(obj.x, 10)
+
     def test_function(self):
         class TestClass(metaclass=CustomMeta):
             # pylint: disable=R0201
@@ -74,6 +77,7 @@ class TestCustomMeta(unittest.TestCase):
                 self.x = x
                 self.y = y
                 self.custom_x = custom_x
+                self.__magic__ = 1010
 
         obj = TestClass(1, 2, 3)
         with self.assertRaises(AttributeError):
@@ -87,6 +91,7 @@ class TestCustomMeta(unittest.TestCase):
         self.assertEqual(obj.custom_y, 2)
         # pylint: disable=E1101
         self.assertEqual(obj.custom_custom_x, 3)
+        self.assertEqual(obj.__magic__, 1010)
 
 
 if __name__ == '__main__':
