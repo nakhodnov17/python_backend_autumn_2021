@@ -1,9 +1,12 @@
 # pylint: disable=W0212,C0114,C0115,C0116
 
-from itertools import product
+import io
+import sys
 import string
-from typing import List
 import unittest
+from typing import List
+from itertools import product
+from contextlib import redirect_stdout
 
 import numpy as np
 
@@ -29,6 +32,71 @@ class DeterministicPlayer(Player):
 
 
 class TestTicTacToe(unittest.TestCase):
+    def setUp(self) -> None:
+        self.check_winner_tests = [(
+            3, 3, 3,
+            np.array([
+                [1, 0, 0],
+                [0, 0, 1],
+                [2, 0, 0]
+            ]), TicTacGame._GAME_CONTINUE
+        ), (
+            3, 3, 3,
+            np.array([
+                [1, 1, 2],
+                [2, 2, 1],
+                [1, 2, 1]
+            ]), TicTacGame._GAME_DRAW
+        ), (
+            3, 3, 3,
+            np.array([
+                [0, 1, 2],
+                [2, 2, 1],
+                [2, 2, 1]
+            ]), TicTacGame._PLAYER_01_TAG
+        ), (
+            3, 3, 3,
+            np.array([
+                [1, 1, 2],
+                [2, 1, 1],
+                [2, 2, 1]
+            ]), TicTacGame._PLAYER_00_TAG
+        ), (
+            6, 6, 4,
+            np.array([
+                [0, 0, 0, 0, 0, 0],
+                [1, 2, 0, 2, 0, 2],
+                [0, 1, 2, 0, 0, 0],
+                [0, 2, 1, 1, 1, 0],
+                [0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 2, 0],
+            ]), TicTacGame._PLAYER_00_TAG
+        ), (
+            6, 6, 4,
+            np.array([
+                [0, 0, 0, 0, 0, 0],
+                [1, 2, 0, 2, 0, 2],
+                [0, 2, 2, 0, 0, 2],
+                [0, 2, 1, 1, 2, 0],
+                [0, 0, 0, 2, 0, 0],
+                [0, 0, 2, 0, 2, 0],
+            ]), TicTacGame._PLAYER_01_TAG
+        ), (
+            6, 6, 4,
+            np.array([
+                [0, 0, 1, 1, 1, 1],
+                [1, 2, 0, 2, 0, 2],
+                [0, 2, 2, 0, 0, 2],
+                [0, 2, 1, 1, 2, 0],
+                [0, 0, 0, 1, 0, 0],
+                [0, 0, 2, 0, 2, 0],
+            ]), TicTacGame._PLAYER_00_TAG
+        )]
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        return super().tearDown()
+
     def test_get_combinations(self):
         self.assertListEqual(get_combinations(0, ''), [])
         with self.assertRaises(ValueError):
@@ -137,119 +205,15 @@ class TestTicTacToe(unittest.TestCase):
         self.assertTupleEqual(game._retrive_step(game.player_01), (0, 2, game._VALIDATE_SUCCESS))
 
     def test_check_winner(self):
-        n_rows, n_columns, n_marks = 3, 3, 3
-        game = TicTacGame(
-            DeterministicPlayer([], name='00'), DeterministicPlayer([], name='01'),
-            n_rows=n_rows, n_columns=n_columns, n_marks=n_marks
-        )
-        mask = np.array([
-            [1, 0, 0],
-            [0, 0, 1],
-            [2, 0, 0]
-        ])
-        game._field[mask == 0] = game._EMPTY_TAG
-        game._field[mask == 1] = game._TIC_TAG
-        game._field[mask == 2] = game._TAC_TAG
-        self.assertEqual(game.check_winner(), game._GAME_CONTINUE)
-
-        n_rows, n_columns, n_marks = 3, 3, 3
-        game = TicTacGame(
-            DeterministicPlayer([], name='00'), DeterministicPlayer([], name='01'),
-            n_rows=n_rows, n_columns=n_columns, n_marks=n_marks
-        )
-        mask = np.array([
-            [1, 1, 2],
-            [2, 2, 1],
-            [1, 2, 1]
-        ])
-        game._field[mask == 0] = game._EMPTY_TAG
-        game._field[mask == 1] = game._TIC_TAG
-        game._field[mask == 2] = game._TAC_TAG
-        self.assertEqual(game.check_winner(), game._GAME_DRAW)
-
-        n_rows, n_columns, n_marks = 3, 3, 3
-        game = TicTacGame(
-            DeterministicPlayer([], name='00'), DeterministicPlayer([], name='01'),
-            n_rows=n_rows, n_columns=n_columns, n_marks=n_marks
-        )
-        mask = np.array([
-            [0, 1, 2],
-            [2, 2, 1],
-            [2, 2, 1]
-        ])
-        game._field[mask == 0] = game._EMPTY_TAG
-        game._field[mask == 1] = game._TIC_TAG
-        game._field[mask == 2] = game._TAC_TAG
-        self.assertEqual(game.check_winner(), game._PLAYER_01_TAG)
-
-        n_rows, n_columns, n_marks = 3, 3, 3
-        game = TicTacGame(
-            DeterministicPlayer([], name='00'), DeterministicPlayer([], name='01'),
-            n_rows=n_rows, n_columns=n_columns, n_marks=n_marks
-        )
-        mask = np.array([
-            [1, 1, 2],
-            [2, 1, 1],
-            [2, 2, 1]
-        ])
-        game._field[mask == 0] = game._EMPTY_TAG
-        game._field[mask == 1] = game._TIC_TAG
-        game._field[mask == 2] = game._TAC_TAG
-        self.assertEqual(game.check_winner(), game._PLAYER_00_TAG)
-
-        n_rows, n_columns, n_marks = 6, 6, 4
-        game = TicTacGame(
-            DeterministicPlayer([], name='00'), DeterministicPlayer([], name='01'),
-            n_rows=n_rows, n_columns=n_columns, n_marks=n_marks
-        )
-        mask = np.array([
-            [0, 0, 0, 0, 0, 0],
-            [1, 2, 0, 2, 0, 2],
-            [0, 1, 2, 0, 0, 0],
-            [0, 2, 1, 1, 1, 0],
-            [0, 0, 0, 1, 0, 0],
-            [0, 0, 0, 0, 2, 0],
-        ])
-        game._field[mask == 0] = game._EMPTY_TAG
-        game._field[mask == 1] = game._TIC_TAG
-        game._field[mask == 2] = game._TAC_TAG
-        self.assertEqual(game.check_winner(), game._PLAYER_00_TAG)
-
-        n_rows, n_columns, n_marks = 6, 6, 4
-        game = TicTacGame(
-            DeterministicPlayer([], name='00'), DeterministicPlayer([], name='01'),
-            n_rows=n_rows, n_columns=n_columns, n_marks=n_marks
-        )
-        mask = np.array([
-            [0, 0, 0, 0, 0, 0],
-            [1, 2, 0, 2, 0, 2],
-            [0, 2, 2, 0, 0, 2],
-            [0, 2, 1, 1, 2, 0],
-            [0, 0, 0, 2, 0, 0],
-            [0, 0, 2, 0, 2, 0],
-        ])
-        game._field[mask == 0] = game._EMPTY_TAG
-        game._field[mask == 1] = game._TIC_TAG
-        game._field[mask == 2] = game._TAC_TAG
-        self.assertEqual(game.check_winner(), game._PLAYER_01_TAG)
-
-        n_rows, n_columns, n_marks = 6, 6, 4
-        game = TicTacGame(
-            DeterministicPlayer([], name='00'), DeterministicPlayer([], name='01'),
-            n_rows=n_rows, n_columns=n_columns, n_marks=n_marks
-        )
-        mask = np.array([
-            [0, 0, 1, 1, 1, 1],
-            [1, 2, 0, 2, 0, 2],
-            [0, 2, 2, 0, 0, 2],
-            [0, 2, 1, 1, 2, 0],
-            [0, 0, 0, 1, 0, 0],
-            [0, 0, 2, 0, 2, 0],
-        ])
-        game._field[mask == 0] = game._EMPTY_TAG
-        game._field[mask == 1] = game._TIC_TAG
-        game._field[mask == 2] = game._TAC_TAG
-        self.assertEqual(game.check_winner(), game._PLAYER_00_TAG)
+        for n_rows, n_columns, n_marks, mask, target_state in self.check_winner_tests:
+            game = TicTacGame(
+                DeterministicPlayer([], name='00'), DeterministicPlayer([], name='01'),
+                n_rows=n_rows, n_columns=n_columns, n_marks=n_marks
+            )
+            game._field[mask == 0] = game._EMPTY_TAG
+            game._field[mask == 1] = game._TIC_TAG
+            game._field[mask == 2] = game._TAC_TAG
+            self.assertEqual(game.check_winner(), target_state)
 
     def test_apply_move(self):
         n_rows, n_columns, n_marks = 3, 3, 3
@@ -319,6 +283,17 @@ class TestTicTacToe(unittest.TestCase):
             player_01.messages[-1].strip().split('\n')[-1],
             'Player 01 game is over. It is a draw.'
         )
+
+    def test_stdinPlayer(self):
+        player = StdinPlayer(name='')
+
+        oldstdin, sys.stdin = sys.stdin, io.StringIO('input test\r\n')
+        with io.StringIO() as stdout_moc, redirect_stdout(stdout_moc):
+            self.assertEqual(player.step(), 'input test')
+
+            player.set('test message')
+            self.assertEqual(stdout_moc.getvalue(), 'test message')
+        sys.stdin = oldstdin
 
 
 if __name__ == '__main__':
