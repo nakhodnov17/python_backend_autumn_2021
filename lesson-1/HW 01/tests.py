@@ -32,8 +32,9 @@ class DeterministicPlayer(Player):
 
 
 class TestTicTacToe(unittest.TestCase):
-    def setUp(self) -> None:
-        self.check_winner_tests = [(
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.check_winner_tests = [(
             3, 3, 3,
             np.array([
                 [1, 0, 0],
@@ -92,10 +93,6 @@ class TestTicTacToe(unittest.TestCase):
                 [0, 0, 2, 0, 2, 0],
             ]), TicTacGame._PLAYER_00_TAG
         )]
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
 
     def test_get_combinations(self):
         self.assertListEqual(get_combinations(0, ''), [])
@@ -205,15 +202,16 @@ class TestTicTacToe(unittest.TestCase):
         self.assertTupleEqual(game._retrive_step(game.player_01), (0, 2, game._VALIDATE_SUCCESS))
 
     def test_check_winner(self):
-        for n_rows, n_columns, n_marks, mask, target_state in self.check_winner_tests:
-            game = TicTacGame(
-                DeterministicPlayer([], name='00'), DeterministicPlayer([], name='01'),
-                n_rows=n_rows, n_columns=n_columns, n_marks=n_marks
-            )
-            game._field[mask == 0] = game._EMPTY_TAG
-            game._field[mask == 1] = game._TIC_TAG
-            game._field[mask == 2] = game._TAC_TAG
-            self.assertEqual(game.check_winner(), target_state)
+        for idx, (n_rows, n_columns, n_marks, mask, target_state) in enumerate(self.check_winner_tests):
+            with self.subTest(current_case=idx):
+                game = TicTacGame(
+                    DeterministicPlayer([], name='00'), DeterministicPlayer([], name='01'),
+                    n_rows=n_rows, n_columns=n_columns, n_marks=n_marks
+                )
+                game._field[mask == 0] = game._EMPTY_TAG
+                game._field[mask == 1] = game._TIC_TAG
+                game._field[mask == 2] = game._TAC_TAG
+                self.assertEqual(game.check_winner(), target_state)
 
     def test_apply_move(self):
         n_rows, n_columns, n_marks = 3, 3, 3
